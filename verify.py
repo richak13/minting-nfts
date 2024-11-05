@@ -2,13 +2,12 @@ from web3 import Web3
 from eth_account.messages import encode_defunct
 import random
 import json
-import hashlib
 
 # Connect to Avalanche Fuji Testnet
 AVAX_RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc"
 w3 = Web3(Web3.HTTPProvider(AVAX_RPC_URL))
 
-# Check network connection
+# Verify connection to network
 if w3.is_connected():
     print("Connected to Avalanche Fuji Testnet")
 else:
@@ -22,8 +21,8 @@ with open("NFT.abi", "r") as abi_file:
 # Instantiate the contract
 contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-# Private key and account setup
-private_key = "b821b64959666b171c69a586e911fbcb08af0b7dd373ca5e6f42982a0366184c"  # Replace with your actual private key
+# Set up account with your private key
+private_key = "b821b64959666b171c69a586e911fbcb08af0b7dd373ca5e6f42982a0366184c"
 account = w3.eth.account.from_key(private_key)
 address = account.address
 print(f"Using account: {address}")
@@ -32,11 +31,10 @@ print(f"Using account: {address}")
 balance = w3.eth.get_balance(address)
 print(f"Account balance: {w3.from_wei(balance, 'ether')} AVAX")
 
-# Mint NFT function with corrected parameters
+# Mint NFT function
 def mint_nft():
     nonce_value = random.randint(1, 1000000)  # Generate a random nonce
-    # Convert the nonce to bytes32
-    nonce_bytes32 = Web3.to_bytes(hexstr=hex(nonce_value))
+    nonce_bytes32 = Web3.to_bytes(hexstr=hex(nonce_value))  # Convert nonce to bytes32
 
     try:
         # Call the claim function with the address and nonce in bytes32 format
@@ -54,7 +52,7 @@ def mint_nft():
 
         # Wait for receipt
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
-        print("Transaction successful:", tx_receipt)
+        print("Minting successful:", tx_receipt)
 
         # Extract and print the token ID
         token_id = tx_receipt['logs'][0]['topics'][3]
@@ -62,5 +60,31 @@ def mint_nft():
     except Exception as e:
         print("Minting failed:", e)
 
-# Run the minting function
-mint_nft()
+# Function to sign the challenge for verification
+def signChallenge(challenge):
+    acct = w3.eth.account.from_key(private_key)
+    signed_message = w3.eth.account.sign_message(challenge, private_key=acct._private_key)
+    return acct.address, signed_message.signature
+
+# Verification function to test the signature
+def verifySig():
+    """
+    This is essentially the code that the autograder will use to test signChallenge.
+    """
+    challenge_bytes = random.randbytes(32)
+    challenge = encode_defunct(challenge_bytes)
+    address, sig = signChallenge(challenge)
+    return w3.eth.account.recover_message(challenge, signature=sig) == address
+
+# Main execution
+if __name__ == '__main__':
+    # Mint the NFT
+    print("Starting NFT minting process...")
+    mint_nft()
+
+    # Then test the sign and verify functionality
+    print("Starting challenge verification...")
+    if verifySig():
+        print("You passed the challenge!")
+    else:
+        print("You failed the challenge!")
