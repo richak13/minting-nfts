@@ -30,6 +30,14 @@ print(f"Using account: {address}")
 # Check AVAX balance
 balance = w3.eth.get_balance(address)
 print(f"Account balance: {w3.from_wei(balance, 'ether')} AVAX")
+print("Starting NFT minting process using combine method...")
+mint_nft_combine()
+
+# Then test the sign and verify functionality
+if verifySig():
+    print("You passed the challenge!")
+else:
+    print( f"You failed the challenge!" )
 
 # Mint NFT function using 'combine'
 def mint_nft_combine():
@@ -85,15 +93,3 @@ def verifySig():
     # Recover the address from the signed message and verify it matches
     return w3.eth.account.recover_message(challenge, signature=sig) == address
 
-# Main execution
-if __name__ == '__main__':
-    # Mint the NFT using the combine method
-    print("Starting NFT minting process using combine method...")
-    mint_nft_combine()
-
-    # Then test the sign and verify functionality
-    print("Starting challenge verification...")
-    if verifySig():
-        print("You passed the challenge!")
-    else:
-        print("You failed the challenge!")
