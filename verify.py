@@ -7,7 +7,7 @@ import json
 AVAX_RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc"
 w3 = Web3(Web3.HTTPProvider(AVAX_RPC_URL))
 
-# Verify connection to network
+# Check network connection
 if w3.is_connected():
     print("Connected to Avalanche Fuji Testnet")
 else:
@@ -31,17 +31,18 @@ print(f"Using account: {address}")
 balance = w3.eth.get_balance(address)
 print(f"Account balance: {w3.from_wei(balance, 'ether')} AVAX")
 
-# Mint NFT function
-def mint_nft():
-    nonce_value = random.randint(1, 1000000)  # Generate a random nonce
-    nonce_bytes32 = Web3.to_bytes(hexstr=hex(nonce_value))  # Convert nonce to bytes32
+# Mint NFT function using 'combine'
+def mint_nft_combine():
+    # Replace these with actual token IDs of NFTs that already exist
+    token_id_a = 1  # Replace with an existing token ID
+    token_id_b = 2  # Replace with another existing token ID
 
     try:
-        # Call the claim function with the address and nonce in bytes32 format
-        tx = contract.functions.claim(address, nonce_bytes32).build_transaction({
+        # Call the combine function with the two token IDs
+        tx = contract.functions.combine(token_id_a, token_id_b).build_transaction({
             'from': address,
             'nonce': w3.eth.get_transaction_count(address),
-            'gas': 300000,  # Increased gas limit
+            'gas': 300000,
             'gasPrice': w3.to_wei('30', 'gwei')
         })
 
@@ -52,11 +53,14 @@ def mint_nft():
 
         # Wait for receipt
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
-        print("Minting successful:", tx_receipt)
+        print("Minting transaction receipt:", tx_receipt)
 
         # Extract and print the token ID
-        token_id = tx_receipt['logs'][0]['topics'][3]
-        print(f"Minted NFT with Token ID: {int(token_id.hex(), 16)}")
+        if tx_receipt.status == 1:
+            token_id = tx_receipt['logs'][0]['topics'][3]
+            print(f"Minted NFT with Token ID: {int(token_id.hex(), 16)}")
+        else:
+            print("Transaction failed to mint NFT.")
     except Exception as e:
         print("Minting failed:", e)
 
@@ -71,16 +75,21 @@ def verifySig():
     """
     This is essentially the code that the autograder will use to test signChallenge.
     """
+    # Generate a random 32-byte challenge for testing
     challenge_bytes = random.randbytes(32)
     challenge = encode_defunct(challenge_bytes)
+
+    # Use signChallenge to sign the challenge
     address, sig = signChallenge(challenge)
+
+    # Recover the address from the signed message and verify it matches
     return w3.eth.account.recover_message(challenge, signature=sig) == address
 
 # Main execution
 if __name__ == '__main__':
-    # Mint the NFT
-    print("Starting NFT minting process...")
-    mint_nft()
+    # Mint the NFT using the combine method
+    print("Starting NFT minting process using combine method...")
+    mint_nft_combine()
 
     # Then test the sign and verify functionality
     print("Starting challenge verification...")
