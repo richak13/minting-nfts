@@ -2,6 +2,7 @@ from web3 import Web3
 from eth_account.messages import encode_defunct
 import random
 import json
+import hashlib
 
 # Connect to Avalanche Fuji Testnet
 AVAX_RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc"
@@ -31,11 +32,15 @@ print(f"Using account: {address}")
 balance = w3.eth.get_balance(address)
 print(f"Account balance: {w3.from_wei(balance, 'ether')} AVAX")
 
-# Mint NFT function with debugging
+# Mint NFT function with corrected parameters
 def mint_nft():
     nonce_value = random.randint(1, 1000000)  # Generate a random nonce
+    # Convert the nonce to bytes32
+    nonce_bytes32 = Web3.to_bytes(hexstr=hex(nonce_value))
+
     try:
-        tx = contract.functions.claim(nonce_value).build_transaction({
+        # Call the claim function with the address and nonce in bytes32 format
+        tx = contract.functions.claim(address, nonce_bytes32).build_transaction({
             'from': address,
             'nonce': w3.eth.get_transaction_count(address),
             'gas': 300000,  # Increased gas limit
